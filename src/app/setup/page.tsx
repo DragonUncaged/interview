@@ -6,7 +6,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { generateRoomKey } from '@/lib/keys';
 import { T } from '@/lib/theme';
 import { MAX_TEST_FIELD_LEN, validateEmailList } from '@/lib/validation';
-import type { Difficulty, Problem } from '@/lib/types';
+import { PROBLEM_COLUMNS, type Difficulty, type Problem } from '@/lib/types';
 
 interface TestRow {
   input: string;
@@ -142,11 +142,7 @@ export default function SetupPage() {
         router.replace('/');
         return;
       }
-      // hidden_tests is revoked from clients; the server merges them in at create time.
-      const { data } = await supabase
-        .from('pl_problems')
-        .select('id,owner_id,number,title,difficulty,description,follow_up,tags,hints,starter_code,visible_tests,created_at')
-        .order('number');
+      const { data } = await supabase.from('pl_problems').select(PROBLEM_COLUMNS).order('number');
       const problems = (data as Problem[]) ?? [];
       setBank(problems);
       const twoSum = problems.find((p) => p.number === 1) ?? problems[0];
@@ -203,7 +199,6 @@ export default function SetupPage() {
           description,
           followUp: selectedProblem?.follow_up ?? null,
           tags: selectedProblem?.tags ?? [],
-          hints: selectedProblem?.hints ?? [],
           starterCode: selectedProblem?.starter_code ?? {},
           visibleTests: visible,
           hiddenTests: hidden,

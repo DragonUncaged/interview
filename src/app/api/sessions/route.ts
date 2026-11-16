@@ -81,18 +81,25 @@ export async function POST(req: Request) {
     if (typeof code === 'string') starterCode[lang] = code.slice(0, MAX_STARTER_LEN);
   }
 
-  // A bank problem's hidden tests are revoked from clients, so merge them in here
-  // with the service role. Only builtins (owner_id null) or the caller's own problems.
-  const problemId = isUuid(body.problemId) ? body.problemId : null;
-  if (problemId) {
-    const { data: prob } = await supabaseAdmin()
+  // A bank problem's hints and hidden tests come from the database, never from the
+  // request. Only builtins (owner_id null) or the caller's own problems.
+  let problemId: string | null = null;
+  let hints = (Array.isArray(body.hints) ? body.hints : []).slice(0, 6).map((h) => str(h, 500));
+  if (isUuid(body.problemId)) {
+    const { data: prob, error: probErr } = await supabaseAdmin()
       .from('pl_problems')
-      .select('owner_id,hidden_tests')
-      .eq('id', problemId)
-      .maybeSingle<{ owner_id: string | null; hidden_tests: TestPair[] | null }>();
+      .select('owner_id,hints,hidden_tests')
+      .eq('id', body.problemId)
+      .maybeSingle<{ owner_id: string | null; hints: unknown[] | null; hidden_tests: TestPair[] | null }>();
+    if (probErr) {
+      console.error('Failed to read bank problem:', { error: probErr, problemId: body.problemId });
+      return NextResponse.json({ error: 'Could not load that problem' }, { status: 500 });
+    }
     if (prob && (prob.owner_id === null || prob.owner_id === user.id)) {
+      problemId = body.problemId;
       // Copied as-is, like pl_assign_problem does: a cut-short test would grade wrong,
       // while an oversized one makes the sandbox report a visible error.
+      hints = (prob.hints ?? []).map(String);
       for (const t of prob.hidden_tests ?? []) {
         if (hidden.length >= MAX_TESTS) break;
         hidden.push({ input: String(t?.input ?? ''), expected: String(t?.expected ?? '') });
@@ -118,7 +125,7 @@ export async function POST(req: Request) {
         description: str(body.description, 20_000),
         follow_up: body.followUp ? str(body.followUp, 2000) : null,
         tags: (Array.isArray(body.tags) ? body.tags : []).slice(0, 8).map((t) => str(t, 40)),
-        hints: (Array.isArray(body.hints) ? body.hints : []).slice(0, 6).map((h) => str(h, 500)),
+        hints,
         starter_code: starterCode,
         language: 'python',
       })

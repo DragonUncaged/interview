@@ -27,7 +27,8 @@ Every database object is prefixed `pl_`, because the Supabase project is shared 
    - `0001_init.sql` creates the tables, RLS policies, functions and realtime rules.
    - `0002_hints_assign.sql` moves hints behind server functions and makes problem assignment atomic.
 
-   The question bank starts empty. You can still write a problem for each interview on the setup page.
+   The question bank lives only in the database, because its rows hold hidden tests and hints. A new project starts with an empty bank, and you can still write a problem for each interview on the setup page.
+   To fill the bank, insert rows into `pl_problems` from the SQL editor. A null `owner_id` makes a problem available to every interviewer. If you keep that SQL in a file, name it `supabase/seed.sql`: git ignores it.
 4. In the Supabase dashboard → Authentication, **enable anonymous sign-ins**. Candidates join anonymously with the room key.
 5. Run `npm run dev` and open http://localhost:3000.
 

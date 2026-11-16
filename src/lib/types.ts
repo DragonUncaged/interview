@@ -19,12 +19,14 @@ export interface Problem {
   description: string;
   follow_up: string | null;
   tags: string[];
-  hints: string[];
   starter_code: Partial<Record<LangId, string>>;
   visible_tests: { input: string; expected: string }[];
-  // Column is revoked from clients; only the service role reads it.
-  hidden_tests?: { input: string; expected: string }[];
 }
+
+// A bank problem's hints and hidden tests never pass through the browser: the server
+// copies them from the database when a session is created or a problem is assigned.
+export const PROBLEM_COLUMNS =
+  'id,owner_id,number,title,difficulty,description,follow_up,tags,starter_code,visible_tests,created_at';
 
 export interface Session {
   id: string;

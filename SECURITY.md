@@ -20,6 +20,7 @@ Postgres is the source of authority. The browser holds a user JWT and can query 
   - Hidden-case details go to `pl_run_hidden_results`, which only interviewers can read.
   - `/api/run` returns hidden details only to interviewers.
 - **Hints.** `pl_sessions.hints` is column-revoked from clients, so clients must select explicit columns, listed in `SESSION_COLUMNS` in `src/lib/types.ts`.
+  - A bank problem's hints and hidden tests never pass through the browser. `/api/sessions` and `pl_assign_problem()` copy them from `pl_problems` on the server, and ignore any hints the request sends for a bank problem. The client reads the bank through `PROBLEM_COLUMNS`.
   - `pl_session_hints()` returns every hint to interviewers, and to candidates only the ones they have revealed.
   - `pl_reveal_hint()` is the only way to reveal one. It checks the caller is the candidate, enforces the order, and records the reveal before returning the text.
 - **Problem assignment.** `pl_assign_problem()` checks the caller is an interviewer and that the problem is a builtin or their own. It then swaps the problem, test cases and hint reveals in one transaction.
@@ -66,6 +67,7 @@ Postgres is the source of authority. The browser holds a user JWT and can query 
 
 1. **Anonymous sign-ins must be enabled** in the dashboard, or candidates can't join.
 2. **Builtin problems are visible to any signed-in, non-anonymous account**, hints included. A candidate who joins with a real account could look up a builtin problem's hints in `pl_problems`. Candidates who join anonymously, the normal path, can't.
+   The app no longer reads `pl_problems.hints` from the browser, so `revoke select (hints) on public.pl_problems from authenticated;` closes this without breaking anything.
 
 ## Verifying the database
 

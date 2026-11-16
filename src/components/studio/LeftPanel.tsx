@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { T, ROLE_COLORS, initials, diffMeta } from '@/lib/theme';
-import { RUBRIC_CRITERIA, type Problem } from '@/lib/types';
+import { PROBLEM_COLUMNS, RUBRIC_CRITERIA, type Problem } from '@/lib/types';
 import type { Studio } from './useStudio';
 
 type Tab = 'problem' | 'rubric' | 'bank' | 'notes';
@@ -213,10 +213,9 @@ export function LeftPanel({ studio, viewRole }: { studio: Studio; viewRole: 'int
   const [hintError, setHintError] = useState<string | null>(null);
   useEffect(() => {
     if (me?.role !== 'interviewer') return;
-    // hidden_tests is revoked from clients, so never select it.
     supabase
       .from('pl_problems')
-      .select('id,owner_id,number,title,difficulty,description,follow_up,tags,hints,starter_code,visible_tests,created_at')
+      .select(PROBLEM_COLUMNS)
       .order('number')
       .then(({ data }) => setBank((data as Problem[]) ?? []));
     // eslint-disable-next-line react-hooks/exhaustive-deps

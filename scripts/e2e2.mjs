@@ -41,18 +41,28 @@ async function main() {
   await alex.client.auth.signInWithPassword(INTERVIEWER);
   await sam.client.auth.signInWithPassword(SECOND);
 
-  console.log('§ Multiple interviewers per candidate');
+  console.log('§ Session from a bank problem');
+  const { data: vp } = await alex.client.from('pl_problems').select('id').eq('number', 20).maybeSingle();
   const create = await (await api('/api/sessions', alex.cookieHeader(), {
     candidateName: 'Marcus Lee',
+    problemId: vp.id,
     problemTitle: 'Valid Parentheses',
     difficulty: 'easy',
     description: 'brackets',
+    hints: ['forged hint'], // ignored: a bank problem's hints come from the database
     visibleTests: [{ input: 's="()"', expected: 'true' }],
     hiddenTests: [{ input: 's="(]"', expected: 'false' }],
     inviteEmails: [SECOND.email], // invite the 2nd account as co-interviewer
   })).json();
   ok('session created with co-interviewer invite', !!create.sessionId, create.error);
   const { sessionId, roomKey } = create;
+  const { data: hints } = await alex.client.rpc('pl_session_hints', { p_session_id: sessionId });
+  ok('hints come from the bank, not the request', hints?.length > 0 && hints.every((h) => h.text && h.text !== 'forged hint'), `hints=${hints?.length}`);
+  const { data: setupTests } = await alex.client.from('pl_test_cases').select('hidden').eq('session_id', sessionId);
+  const hiddenCount = (setupTests ?? []).filter((t) => t.hidden).length;
+  ok("bank hidden tests merged with the interviewer's extra one", hiddenCount === 4, `hidden=${hiddenCount}`);
+
+  console.log('\n§ Multiple interviewers per candidate');
 
   const samJoin = await (await api('/api/join', sam.cookieHeader(), { key: roomKey })).json();
   ok('INVITED account joins as INTERVIEWER (not candidate)', samJoin.role === 'interviewer', `got ${samJoin.role}`);
