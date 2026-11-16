@@ -114,6 +114,20 @@ export function useStudio(sessionId: string) {
     setHints(Array.isArray(data) ? (data as HintView[]) : []);
   }, [sessionId, supabase]);
 
+  const participantIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    participantIdsRef.current = new Set(participants.map((p) => p.user_id));
+  }, [participants]);
+
+  const loadParticipants = useCallback(async () => {
+    const { data } = await supabase
+      .from('pl_session_participants')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('joined_at');
+    if (data) setParticipants(data as Participant[]);
+  }, [sessionId, supabase]);
+
   const loadCore = useCallback(
     async (uid: string) => {
       const [{ data: sess }, { data: parts }, { data: tcs }, { data: cms }, { data: hls }] =
@@ -230,8 +244,10 @@ export function useStudio(sessionId: string) {
       channelRef.current = channel;
 
       channel.on('presence', { event: 'sync' }, () => {
-        const state = channel!.presenceState();
-        setOnlineIds(new Set(Object.keys(state)));
+        const ids = Object.keys(channel!.presenceState());
+        setOnlineIds(new Set(ids));
+        // Someone joined after this page loaded. Presence is only a signal: re-read the roster.
+        if (ids.some((id) => !participantIdsRef.current.has(id))) void loadParticipants();
       });
 
       channel.on('broadcast', { event: 'cursor' }, ({ payload }) => {
