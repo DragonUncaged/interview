@@ -13,7 +13,7 @@ Postgres is the source of authority. The browser holds a user JWT and can query 
 - **Membership checks.** `pl_is_participant()` and `pl_is_interviewer()` back every other policy.
 - **Hidden tests.**
   - `pl_test_cases` hidden rows are readable only by interviewers.
-  - `pl_problems.hidden_tests` is column-revoked from `anon`/`authenticated`.
+  - `pl_problems.hidden_tests` and `pl_problems.hints` are column-revoked from `anon`/`authenticated`.
   - Routes read them with the service role.
 - **Run results.**
   - Only the service role writes `pl_runs`.
@@ -66,8 +66,7 @@ Postgres is the source of authority. The browser holds a user JWT and can query 
 ## Known open issues
 
 1. **Anonymous sign-ins must be enabled** in the dashboard, or candidates can't join.
-2. **Builtin problems are visible to any signed-in, non-anonymous account**, hints included. A candidate who joins with a real account could look up a builtin problem's hints in `pl_problems`. Candidates who join anonymously, the normal path, can't.
-   The app no longer reads `pl_problems.hints` from the browser, so `revoke select (hints) on public.pl_problems from authenticated;` closes this without breaking anything.
+2. **Any signed-in, non-anonymous account can browse the builtin problems**: titles, descriptions and visible tests. A candidate with a real account could see which problems might come up. Hints and hidden tests stay unreadable.
 
 ## Verifying the database
 
@@ -82,11 +81,12 @@ where schemaname = 'public' and tablename like 'pl\_%' order by 1;
 select tablename, policyname, cmd, qual, with_check from pg_policies
 where schemaname = 'public' and tablename like 'pl\_%' order by 1, 2;
 
--- hidden_tests must not be selectable by clients. Expect no anon or authenticated rows.
-select grantee, privilege_type from information_schema.column_privileges
-where table_name = 'pl_problems' and column_name = 'hidden_tests';
+-- A bank problem's hidden_tests and hints must not be selectable by clients. Expect no rows.
+select grantee, column_name from information_schema.column_privileges
+where table_name = 'pl_problems' and column_name in ('hidden_tests', 'hints')
+  and privilege_type = 'SELECT' and grantee in ('anon', 'authenticated');
 
--- hints must not be selectable by clients. Expect no rows.
+-- Session hints must not be selectable by clients. Expect no rows.
 select grantee from information_schema.column_privileges
 where table_name = 'pl_sessions' and column_name = 'hints' and grantee in ('anon', 'authenticated');
 

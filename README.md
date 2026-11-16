@@ -23,9 +23,10 @@ Every database object is prefixed `pl_`, because the Supabase project is shared 
    npm install
    ```
 2. Copy `.env.example` to `.env.local`, then fill in `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`.
-3. Apply the schema. Run the two files in `supabase/migrations/` in order, in the Supabase SQL editor or with `psql "$DATABASE_URL" -f <file>`:
+3. Apply the schema. Run the three files in `supabase/migrations/` in order, in the Supabase SQL editor or with `psql "$DATABASE_URL" -f <file>`:
    - `0001_init.sql` creates the tables, RLS policies, functions and realtime rules.
    - `0002_hints_assign.sql` moves hints behind server functions and makes problem assignment atomic.
+   - `0003_bank_hints.sql` stops clients from reading the bank's hints.
 
    The question bank lives only in the database, because its rows hold hidden tests and hints. A new project starts with an empty bank, and you can still write a problem for each interview on the setup page.
    To fill the bank, insert rows into `pl_problems` from the SQL editor. A null `owner_id` makes a problem available to every interviewer. If you keep that SQL in a file, name it `supabase/seed.sql`: git ignores it.
