@@ -31,9 +31,9 @@ export const T = {
     str: '#ecc48d',
     num: '#f78c6c',
   },
-  fontUI: "'Space Grotesk', system-ui, sans-serif",
-  fontMono: "'JetBrains Mono', ui-monospace, monospace",
-  fontHand: "'Caveat', cursive",
+  fontUI: 'var(--font-ui), system-ui, sans-serif',
+  fontMono: 'var(--font-mono), ui-monospace, monospace',
+  fontHand: 'var(--font-hand), cursive',
 } as const;
 
 export const ROLE_COLORS = {

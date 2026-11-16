@@ -64,6 +64,18 @@ const TOOLS: { id: WbTool; title: string; icon: React.ReactNode }[] = [
   },
 ];
 
+const canvasFamilies = new Map<string, string>();
+
+/** Canvas text can't use CSS variables, so look up the family next/font registered. */
+function canvasFont(canvas: HTMLCanvasElement, cssVar: string, generic: string): string {
+  let family = canvasFamilies.get(cssVar);
+  if (family === undefined) {
+    family = getComputedStyle(canvas).getPropertyValue(cssVar).trim();
+    if (family) canvasFamilies.set(cssVar, family);
+  }
+  return family ? `${family}, ${generic}` : generic;
+}
+
 function drawObject(ctx: CanvasRenderingContext2D, o: WbObject) {
   ctx.strokeStyle = o.color;
   ctx.fillStyle = o.color;
@@ -108,7 +120,7 @@ function drawObject(ctx: CanvasRenderingContext2D, o: WbObject) {
       break;
     }
     case 'text':
-      ctx.font = "20px 'Caveat', cursive";
+      ctx.font = `20px ${canvasFont(ctx.canvas, '--font-hand', 'cursive')}`;
       ctx.textBaseline = 'top';
       (o.text ?? '').split('\n').forEach((line, i) => ctx.fillText(line, o.x!, o.y! + i * 24));
       break;
@@ -121,7 +133,7 @@ function drawObject(ctx: CanvasRenderingContext2D, o: WbObject) {
       ctx.strokeStyle = 'rgba(255,212,121,0.5)';
       ctx.strokeRect(o.x!, o.y!, w, h);
       ctx.fillStyle = T.yellow;
-      ctx.font = "13px 'Space Grotesk', sans-serif";
+      ctx.font = `13px ${canvasFont(ctx.canvas, '--font-ui', 'sans-serif')}`;
       ctx.textBaseline = 'top';
       lines.forEach((line, i) => ctx.fillText(line, o.x! + 8, o.y! + 8 + i * 18, w - 16));
       break;

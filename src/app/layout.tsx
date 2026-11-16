@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { Space_Grotesk, JetBrains_Mono, Caveat } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const ui = Space_Grotesk({ variable: '--font-ui', subsets: ['latin'], weight: ['400', '500', '600', '700'] });
-const mono = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], weight: ['400', '500', '600', '700'] });
-const hand = Caveat({ variable: '--font-hand', subsets: ['latin'], weight: ['500', '600', '700'] });
+// Self-hosted because fetching from Google Fonts at build time fails at random under
+// Turbopack. Latin-subset variable fonts under the SIL Open Font License (fonts/OFL.txt).
+const spaceGrotesk = localFont({ src: './fonts/space-grotesk-latin.woff2', weight: '400 700', variable: '--font-ui' });
+const jetbrainsMono = localFont({ src: './fonts/jetbrains-mono-latin.woff2', weight: '400 700', variable: '--font-mono' });
+const caveat = localFont({ src: './fonts/caveat-latin.woff2', weight: '500 700', variable: '--font-hand' });
 
 export const metadata: Metadata = {
   title: 'PARALLEL — Interview Studio',
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${ui.variable} ${mono.variable} ${hand.variable}`}>{children}</body>
+      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${caveat.variable}`}>{children}</body>
     </html>
   );
 }
