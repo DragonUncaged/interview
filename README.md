@@ -6,6 +6,22 @@ Live coding interviews that feel like pairing. Interviewer and candidate share:
 - interviewer "pins" on lines and tokens
 - visible and hidden test cases that run in a remote sandbox
 
+![Interviewer view of a live session](docs/images/studio-interviewer.png)
+
+The interviewer's view of a real session. The candidate's code arrives as they type, with a line comment and a pinned line from the interviewer next to it. The whiteboard is shared, and the run passed all four test cases, including the two hidden ones.
+
+### What the candidate sees
+
+![Candidate view of the same session](docs/images/studio-candidate.png)
+
+Same code, comment and board. Visible tests show their inputs and outputs. Hidden tests show only a pass count, and the interviewer's pin is called out above the editor.
+
+### Setting up an interview
+
+![The new interview page with Two Sum picked from the question bank](docs/images/setup.png)
+
+These screenshots come from a real session on the live app, with one browser for each person.
+
 ## Stack
 
 | Layer | Choice |
